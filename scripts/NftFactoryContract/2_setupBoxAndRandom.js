@@ -4,6 +4,7 @@ const { addresses: boxNftAddresses } = require('../MysteryBoxNftContract/proxyAd
 const { addresses: prlNftAddresses } = require('../PrlNftContract/proxyAddresses');
 
 async function main() {
+  const fe = (num) => ethers.utils.formatEther(num) // formatEther
   const [deployer] = await ethers.getSigners();
 
   const network = hardhatArguments.network;
@@ -11,8 +12,13 @@ async function main() {
 
   console.log("With the account:", deployer.address);
   console.log("With NftFactoryContract address:", contractAddress);
+  const beforeDeploy = fe(await deployer.getBalance());
 
   const nftFactoryContract = await ethers.getContractAt("NftFactoryContract",contractAddress);
+
+  // Set start time
+  await nftFactoryContract.setStartTime(1640451600); // Sunday, December 26, 2021 12:00:00 AM GMT+07:00
+  await nftFactoryContract.setEndTime(1640710740); // Tuesday, December 28, 2021 11:59:00 PM GMT+07:00
 
   // Mint 100 Boxes
   var boxes = []
@@ -39,6 +45,8 @@ async function main() {
   await nftFactoryContract.setRandomNFT(randomNFTs);
   console.log("Set Random NFT success");
 
+  const afterDeploy = fe(await deployer.getBalance());
+  console.log("Cost spent:", (beforeDeploy-afterDeploy));
 }
 
 main()

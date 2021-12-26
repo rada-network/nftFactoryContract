@@ -36,6 +36,8 @@ contract NftFactoryContract is
     address public WITHDRAW_ADDRESS;
     uint256 public priceBox;
     uint256 public maxBuyPerAddress;
+    uint256 public startTime;
+    uint256 public endTime;
     bool public requireWhitelist;
     mapping(address => bool) public whitelistAddresses;
 
@@ -148,6 +150,10 @@ contract NftFactoryContract is
             "Not enough Token"
         );
 
+        // require campaign is open
+        require(block.timestamp >= startTime, "Not Started"); // The campaign have not started
+        require(block.timestamp <= endTime, "Expired"); // The campaign has been expired
+
         uint256 allowToPayAmount = busdToken.allowance(
             _msgSender(),
             address(this)
@@ -156,15 +162,7 @@ contract NftFactoryContract is
         require(boxesForSell.length >= totalSoldBoxes, "Sold out");
         require(maxBuyPerAddress > buyersBoxTotal[_msgSender()], "Got limited");
 
-        // Require white list
-        /* require(
-            !requireWhitelist || whitelistAddresses[_msgSender()],
-            "Whitelist only"
-        ); */
-
         uint256 tokenId = boxesForSell[totalSoldBoxes];
-        // Check owner of NFT;
-        // require(boxNft.ownerOf(tokenId) == address(this), "Not avaiable");
         // Mint the Box
         boxNft.safeMint(_msgSender(), tokenId);
 
@@ -172,8 +170,6 @@ contract NftFactoryContract is
 
         // transfer BUSD
         busdToken.safeTransferFrom(_msgSender(), address(this), priceBox);
-        // transfer NFT / not use
-        // boxNft.safeTransferFrom(address(this), _msgSender(), tokenId);
 
         buyersBoxTotal[_msgSender()]++;
         seenNonces[_msgSender()][_nonce] = true;
@@ -204,14 +200,9 @@ contract NftFactoryContract is
         boxNft.burn(_tokenId);
 
         uint256 nftTokenId = randomNFTs[totalOpenBoxes];
-        /* require(
-            ticketNft.ownerOf(nftTokenId) == address(this),
-            "Please try again"
-        ); */
+
         if (nftTokenId > 0) {
             // Win NFT
-            // transfer NFT
-            // ticketNft.safeTransferFrom(address(this), _msgSender(), nftTokenId);
             ticketNft.safeMint(_msgSender(), nftTokenId);
         }
         totalOpenBoxes++;
@@ -249,7 +240,7 @@ contract NftFactoryContract is
     /**
      * @dev function to set price
      */
-    function setPriceBox(uint256 _price) public onlyOwner {
+    function setPriceBox(uint256 _price) public onlyAdmin {
         require(priceBox != _price, "Already set");
 
         priceBox = _price;
@@ -258,14 +249,14 @@ contract NftFactoryContract is
     /**
      * @dev function to set boxes for sell by tokenId
      */
-    function setBoxesForSell(uint256[] memory _tokenIds) public onlyOwner {
+    function setBoxesForSell(uint256[] memory _tokenIds) public onlyAdmin {
         boxesForSell = _tokenIds;
     }
 
     /**
      * @dev function to set limit buy per address
      */
-    function setMaxBuyPerAddress(uint256 _limit) public onlyOwner {
+    function setMaxBuyPerAddress(uint256 _limit) public onlyAdmin {
         require(maxBuyPerAddress != _limit, "Already set");
         maxBuyPerAddress = _limit;
     }
@@ -275,7 +266,7 @@ contract NftFactoryContract is
      */
     function setWhitelist(address[] memory _addresses, bool _allow)
         public
-        onlyOwner
+        onlyAdmin
     {
         for (uint256 i = 0; i < _addresses.length; i++) {
             whitelistAddresses[_addresses[i]] = _allow;
@@ -285,18 +276,36 @@ contract NftFactoryContract is
     /**
      * @dev function to set white list address
      */
-    function setRequireWhitelist(bool _allow) public onlyOwner {
+    function setRequireWhitelist(bool _allow) public onlyAdmin {
         require(requireWhitelist != _allow, "Already set");
         requireWhitelist = _allow;
     }
 
     /**
-     * @dev function to set white list address
+     * @dev function to set random nfts
      */
-    function setRandomNFT(uint256[] memory _randomTokenIds) public onlyOwner {
+    function setRandomNFT(uint256[] memory _randomTokenIds) external onlyAdmin {
         require(totalOpenBoxes == 0, "Boxex aleardy openned");
 
         randomNFTs = _randomTokenIds;
+    }
+
+    /**
+     * @dev function to set start time
+     */
+    function setStartTime(uint256 _startTime) external onlyAdmin {
+        require(startTime != _startTime, "Already set");
+
+        startTime = _startTime;
+    }
+
+    /**
+     * @dev function to set end time
+     */
+    function setEndTime(uint256 _endTime) external onlyAdmin {
+        require(endTime != _endTime, "Already set");
+
+        endTime = _endTime;
     }
 
     /**

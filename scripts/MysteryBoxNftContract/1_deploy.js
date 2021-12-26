@@ -12,6 +12,7 @@ async function main() {
   const proxyContract = await MysteryBoxNftContract.deploy();
   console.log("Contract address:", proxyContract.address);
 
+  console.log("Account balance:", (await deployer.getBalance()).toString());
 }
 
 main()

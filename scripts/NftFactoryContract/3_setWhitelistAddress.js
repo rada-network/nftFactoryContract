@@ -36,6 +36,7 @@ async function main() {
     "0xF5e2BE3Cc5d32Fa1C53274C6e3bA266964097e17",
     "0x1861233D1Ab84dD59F8ce798BDEe7B164117e8f2",
     "0xa97F7521D6A1Cf4dB598e3Adc28588edafb2b97B",
+    "0x8B62DC632A1793F65adeDc38f4531F403a038d66"
   ];
 
   await nftFactoryContract.setWhitelist(whitelist,true);

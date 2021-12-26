@@ -1,7 +1,17 @@
 // We import Chai to use its asserting functions here.
-const { expect } = require("chai");
-const { ethers, upgrades } = require('hardhat');
-const { BN, constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
+const {
+  expect
+} = require("chai");
+const {
+  ethers,
+  upgrades
+} = require('hardhat');
+const {
+  BN,
+  constants,
+  expectEvent,
+  expectRevert
+} = require('@openzeppelin/test-helpers');
 
 describe("NFT Contract", function () {
 
@@ -17,8 +27,8 @@ describe("NFT Contract", function () {
   // Utils
   const pe = (num) => ethers.utils.parseEther(num) // parseEther
   const fe = (num) => ethers.utils.formatEther(num) // formatEther
-  const pu = (num, decimals=0) => ethers.utils.parseUnits(num, decimals) // parseUnits
-  const fu = (num, decimals=0) => ethers.utils.formatUnits(num, decimals) // formatEther
+  const pu = (num, decimals = 0) => ethers.utils.parseUnits(num, decimals) // parseUnits
+  const fu = (num, decimals = 0) => ethers.utils.formatUnits(num, decimals) // formatEther
 
   beforeEach(async function () {
 
@@ -34,7 +44,9 @@ describe("NFT Contract", function () {
 
     // Get the ContractFactory
     const NftFactoryContract = await ethers.getContractFactory("NftFactoryContract");
-    contractNftFactory = await upgrades.deployProxy(NftFactoryContract, [bUSDToken.address, contractMysteryBoxNFT.address, contractPrlNft.address], { kind: 'uups' });
+    contractNftFactory = await upgrades.deployProxy(NftFactoryContract, [bUSDToken.address, contractMysteryBoxNFT.address, contractPrlNft.address], {
+      kind: 'uups'
+    });
 
     /* NFT */
     // Set updateBaseURI
@@ -52,9 +64,14 @@ describe("NFT Contract", function () {
     // Set minter
     await contractNftFactory.setAdmin(minterUser.address, true);
 
+    // Set start time
+    await contractNftFactory.setStartTime(1640398360); // Now
+    await contractNftFactory.setEndTime(1640710740); // Tuesday, December 28, 2021 11:59:00 PM GMT+07:00
+
+
     // Mint 100 Boxes
     var boxes = []
-    for(var i=1001;i<=1100;i++) {
+    for (var i = 1001; i <= 1100; i++) {
       boxes.push(i)
     }
     // await contractNftFactory.mintToContract(contractMysteryBoxNFT.address, boxes);
@@ -64,7 +81,7 @@ describe("NFT Contract", function () {
 
     // Mint 100 PRL NFT
     var nfts = [];
-    for(var i=100001;i<=100100;i++) {
+    for (var i = 100001; i <= 100100; i++) {
       nfts.push(i);
     }
     // await contractNftFactory.mintToContract(contractPrlNft.address, nfts);
@@ -128,7 +145,7 @@ describe("NFT Contract", function () {
 
   it('Should buy Box successfully - whitelist', async function () {
     // Set white list
-    await contractNftFactory.setWhitelist([buyerUser.address],true);
+    await contractNftFactory.setWhitelist([buyerUser.address], true);
 
     // Set limit buy
     await contractNftFactory.setMaxBuyPerAddress(2);
@@ -197,7 +214,7 @@ describe("NFT Contract", function () {
 
   it('Should buy Box successfully and reverted over max buy allow - whitelist', async function () {
     // Set white list
-    await contractNftFactory.setWhitelist([buyerUser.address],true);
+    await contractNftFactory.setWhitelist([buyerUser.address], true);
 
     // Set limit buy
     // await contractNftFactory.setMaxBuyPerAddress(1); // 1 is default
@@ -217,7 +234,7 @@ describe("NFT Contract", function () {
 
   it('Should buy all Boxes successfully and sold out - whitelist', async function () {
     // Set white list
-    await contractNftFactory.setWhitelist([buyerUser.address],true);
+    await contractNftFactory.setWhitelist([buyerUser.address], true);
     // Set limit buy
     await contractNftFactory.setMaxBuyPerAddress(1000);
 
@@ -227,7 +244,7 @@ describe("NFT Contract", function () {
     // Admin top up payable token to user
     await bUSDToken.transfer(buyerUser.address, pe("11000"));
 
-    for(var i=1001;i<=1100;i++) {
+    for (var i = 1001; i <= 1100; i++) {
       // Buy box
       saltNonce = Math.floor(Math.random() * 9999999) + 1000000; // Random nonce
       await contractNftFactory.connect(buyerUser).buyBox(saltNonce)
@@ -241,7 +258,7 @@ describe("NFT Contract", function () {
 
   it('Should buy Box and open box successfully - whitelist', async function () {
     // Set white list
-    await contractNftFactory.setWhitelist([buyerUser.address],true);
+    await contractNftFactory.setWhitelist([buyerUser.address], true);
 
     // Approve & top up BUSD
     await bUSDToken.connect(buyerUser).approve(contractNftFactory.address, pe("100"));
@@ -260,6 +277,36 @@ describe("NFT Contract", function () {
 
     /* const nftTokenId = await contractPrlNft.tokenOfOwnerByIndex(buyerUser.address, 0);
     console.log(fu(nftTokenId)) */
+
+  });
+
+  it('Should reverted buy Box when campaign has been not start or expired - whitelist', async function () {
+    // Approve & top up BUSD
+    await bUSDToken.connect(buyerUser).approve(contractNftFactory.address, pe("100"));
+    await bUSDToken.transfer(buyerUser.address, pe("100"));
+
+    // Set white list
+    await contractNftFactory.setWhitelist([buyerUser.address], true);
+    await contractNftFactory.setStartTime(1640451600); // Sunday, December 26, 2021 12:00:00 AM GMT+07:00
+    // Should reverted
+    await expect(contractNftFactory.connect(buyerUser).buyBox(saltNonce)).to.be.reverted;
+
+
+    await contractNftFactory.setStartTime(1640398360); // Now
+    // Bought success
+    saltNonce = Math.floor(Math.random() * 9999999) + 1000000; // Random nonce
+    await contractNftFactory.connect(buyerUser).buyBox(saltNonce);
+
+    const START_TIME = Math.floor(Date.now() / 1000);
+    const increaseDays = 600;
+    const increaseTime = parseInt(START_TIME) - Math.floor(Date.now() / 1000) + 86400 * (increaseDays - 1);
+
+    await ethers.provider.send("evm_increaseTime", [increaseTime]);
+    await ethers.provider.send("evm_mine", []) // force mine the next block
+
+    // Should reverted
+    saltNonce = Math.floor(Math.random() * 9999999) + 1000000; // Random nonce
+    await expect(contractNftFactory.connect(buyerUser).buyBox(saltNonce)).to.be.reverted;
 
   });
 });
