@@ -18,10 +18,14 @@ async function main() {
   const topUpList = [
     "0x1334e18C74D983692647C7ad029E595B1D9b1699"
   ];
+
   for (const addr of topUpList) {
-    await bUsdContract.transfer(addr,pe("100"))
-    console.log(addr);
-    console.log("Top up "+addr);
+    await deployer.sendTransaction({
+      to: addr,
+      value: ethers.utils.parseEther("0.02") // 0.02 bnb
+    })
+    // await bUsdContract.transfer(addr,pe("100"))
+    console.log("Send BNB to "+addr);
   }
 
   console.log("Top up success");

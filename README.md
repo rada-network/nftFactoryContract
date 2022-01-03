@@ -40,8 +40,8 @@ npx hardhat run scripts/NftFactoriesContract/5_setWhitelistAddress.js --network 
 
 npx hardhat run scripts/NftFactoriesContract/getImplementationAddress.js --network testnet
 
+npx hardhat verify --network testnet 0xe5795B0d2E635d190299F9eDF52D38F8093781D5
 npx hardhat verify --network testnet 0xc7309b43eF2F9E1D90e054d9433201a034f8618c
-npx hardhat verify --network testnet 0x24825D62d4658DA1d5cB517E2CB445D1A00F65C6
 ```
 
 Build & Deploy BSC testnet | MysteryBoxNFTContract
@@ -54,6 +54,8 @@ npx hardhat run scripts/RadaNftContract/2_setup.js --network testnet
 
 // npx hardhat verify --network testnet --contract contracts/MysteryBoxNFTContract.sol:RadaNftContract 0x839Ef4925f169140211bf0B6ae441469ae70F900
 
+npx hardhat run scripts/RadaNftContract/getNFTToken.js --network testnet
+
 ```
 
 Build & Deploy NFT contract and NftFactory Contract
@@ -64,7 +66,7 @@ npx hardhat run scripts/NftFactoriesContract/1_deploy.js --network testnet
 // Copy Proxy address to proxyAddresses.js
 npx hardhat run scripts/NftFactoriesContract/2_createCampaignAllocationBoxAndRandom.js --network testnet
 npx hardhat run scripts/NftFactoriesContract/3_updateProgram.js --network testnet
-npx hardhat run scripts/NftFactoriesContract/4_setWhitelistAddress.js --network testnet
+npx hardhat run scripts/NftFactoriesContract/5_setWhitelistAddress.js --network testnet
 
 npx hardhat run scripts/NftFactoriesContract/getImplementationAddress.js --network testnet
 npx hardhat verify --network testnet 0xdcEc2C5f5aF78a08c513cf4Ed139C88A3aD2eaE7

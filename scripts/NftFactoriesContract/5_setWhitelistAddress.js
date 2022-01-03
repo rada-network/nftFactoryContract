@@ -16,7 +16,7 @@ async function main() {
 
   // TODO: add real whitelist
   const whitelist = [
-    "0xAE51701F3eB7b897eB6EE5ecdf35c4fEE29BFAe6", // Quang
+    "0x1334e18C74D983692647C7ad029E595B1D9b1699"
   ];
 
   const campaignId = fu(await nftFactoriesContract.campaignCount()) - 1;
